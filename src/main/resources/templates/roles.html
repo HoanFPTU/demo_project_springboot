@@ -1,0 +1,129 @@
+
+<th:block layout:fragment="content">
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3" aria-live="polite" aria-atomic="true"></div>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <!-- Search and Filter Bar -->
+                    <div class="d-flex align-items-stretch gap-5" style="width: 45%;">
+                        <div class="input-group" style="width: 100%;">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search roles..." aria-label="Search roles">
+                            <button class="btn btn-outline-secondary" type="button" id="searchBtn" title="Search">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Action Buttons -->
+                    <div class="ms-auto d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary" id="reloadBtn" title="Reload">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="viewToggleBtn" title="Switch to Grid View" onclick="toggleView()">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <a href="/api/roles/export" class="btn btn-outline-secondary" title="Export">
+                            <i class="fas fa-file-export"></i>
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#importModal" title="Import">
+                            <i class="fas fa-file-import"></i>
+                        </button>
+                        <button class="btn btn-primary" onclick="createRole()" title="Add Role">
+                            <i class="fas fa-plus"></i> Add Role
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Import Modal -->
+                <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <p>Download the Excel template before uploading your file:</p>
+                                    <a href="static/templates/roles_template.xlsx" class="btn btn-link" download>Download Template</a>
+                                </div>
+                                <form id="importForm" method="post" enctype="multipart/form-data">
+                                    <div class="mb-3">
+                                        <label for="file" class="form-label">Choose Excel File</label>
+                                        <input type="file" name="file" id="file" class="form-control" accept=".xlsx,.xls" required>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-primary">Import</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Role Form Modal -->
+                    <div class="modal fade" id="roleFormModal" tabindex="-1" aria-labelledby="roleFormModalLabel" aria-hidden="true" data-bs-backdrop="static">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="roleFormModalLabel">Role Form</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="roleForm" class="p-4 border rounded shadow-sm bg-light">
+                                        <input type="hidden" id="roleId">
+                                        <div class="row g-3">
+                                            <div class="col-md-12">
+                                                <label for="roleName" class="form-label fw-semibold">Role Name</label>
+                                                <input type="text" class="form-control" id="roleName" placeholder="Enter role name" required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer mt-4">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary">Save</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- List View -->
+                    <div id="listView" class="table-responsive mt-3" style="max-height: 50vh; overflow-y: auto;">
+                        <table class="table table-hover align-middle table-bordered">
+                            <thead class="table-light position-sticky top-0" style="z-index: 1;">
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th onclick="sortTable('name')" style="cursor: pointer;">
+                                    NAME <i class="fa fa-sort text-muted" id="sort-name"></i>
+                                </th>
+                                <th class="text-start">ACTIONS</th>
+                            </tr>
+                            </thead>
+                            <tbody id="roleTable" class="bg-white">
+                            <tr class="placeholder-glow" aria-hidden="true">
+                                <td class="text-center"><span class="placeholder col-1"></span></td>
+                                <td><span class="placeholder col-6"></span></td>
+                                <td><span class="placeholder col-6"></span></td>
+                                <td class="text-start"><span class="placeholder col-4"></span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Grid View -->
+                    <div id="gridView" class="d-none mt-3 table-responsive" style="max-height: 60vh; overflow-y: auto;">
+                        <div class="row" id="roleGrid"></div>
+                    </div>
+
+                    <!-- Pagination Controls -->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="text-muted">
+                            <i class="fas fa-list-ol me-1"></i> Total: <span id="totalRecords">0</span> records
+                        </div>
+                        <div id="paginationControls" class="text-center"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>

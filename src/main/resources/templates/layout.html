@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{fragments :: common_header(${title}, ${css})}"></head>
+
+  <body>
+    <div class="wrapper">
+      <!-- Include sidebar fragment -->
+      <div th:replace="~{fragments :: sidebar}"></div>
+
+      <!-- Main Content Wrapper -->
+      <div class="main" id="main">
+        <!-- Include navbar fragment -->
+        <div th:replace="~{fragments :: navbar}"></div>
+
+        <!-- Content Area -->
+        <div class="content-wrapper">
+          <div class="container-fluid">
+            <!-- Main content from individual pages -->
+            <h1 class="mb-4 text-center" id="title-page" th:text="${title}" th:unless="${hideDefaultTitle}">
+              Dashboard
+            </h1>
+            <th:block th:replace="~{${content}}"></th:block>
+
+          </div>
+        </div>
+
+        <!-- Include footer fragment -->
+        <div th:replace="~{fragments :: footer}"></div>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <!-- Load CKEditor 4 -->
+    <script src="https://cdn.ckeditor.com/4.22.1/full/ckeditor.js"></script>
+    <script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/videojs-youtube@3.0.0/dist/Youtube.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script src="/js/layout.js"></script>
+    <script th:src="@{/js/sidebar.js}"></script>
+    <th:block th:if="${js != null}">
+      <script th:each="src : ${js}" th:src="${src}"></script>
+    </th:block>
+  </body>
+</html>

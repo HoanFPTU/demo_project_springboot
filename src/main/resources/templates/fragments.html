@@ -1,0 +1,358 @@
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+  xmlns="http://www.w3.org/1999/html"
+>
+  <head th:fragment="common_header(title, css)">
+    <title th:text="${title}">The LMS</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.12.1/font/bootstrap-icons.min.css"
+    />
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:if="${css != null}" th:href="${css}" />
+
+    <style>
+      /* Hiệu ứng xoay mũi tên khi open/close */
+      .sidebar .fa-chevron-down {
+        transition: transform 0.3s ease;
+      }
+      .sidebar .fa-chevron-down.fa-rotate-180 {
+        transform: rotate(180deg);
+      }
+
+      /* CSS để hiệu ứng slide-down khi mở/đóng collapse */
+      .sidebar .collapse {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
+        opacity: 0;
+      }
+
+      .sidebar .collapse.show {
+        max-height: 2000px; /* Giá trị đủ lớn để đảm bảo hiển thị tất cả nội dung */
+        transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in;
+        opacity: 1;
+      }
+
+      /* CSS cho menu items bên trong */
+      .sidebar .collapse .nav {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+      }
+
+      /* Thêm hiệu ứng phụ cho mục con */
+      .sidebar .collapse .nav-link {
+        transition: all 0.3s ease;
+        transform-origin: left;
+      }
+
+      /* Làm mượt các hiệu ứng chuyển động */
+      .sidebar .nav-item {
+        position: relative;
+      }
+
+      /* Đảm bảo chiều cao không bị đột ngột thay đổi */
+      .sidebar ul.sidebar-menu > li {
+        overflow: hidden;
+      }
+
+      /* Cho phép sidebar có thể cuộn (scroll) */
+      .sidebar {
+        overflow-y: auto;
+        max-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+      }
+
+      /* Cố định sidebar header */
+      .sidebar-header {
+        position: sticky;
+        top: 0;
+        background-color: inherit;
+        z-index: 10;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      /* Cho phép sidebar ở chế độ collapsed có thể cuộn (scroll) */
+      .sidebar.collapsed {
+        overflow-y: auto;
+        max-height: 100vh;
+        width: 80px;
+      }
+
+      /* Sửa lỗi hiển thị khi sidebar bị thu gọn */
+      .sidebar.collapsed #sidebarAccordion {
+        overflow-y: visible !important;
+        max-height: none !important;
+      }
+
+      .sidebar.collapsed #flat-modules-container {
+        overflow-y: visible !important;
+        max-height: none !important;
+      }
+
+      /* Cho phép container chứa các module có thể cuộn */
+      #flat-modules-container {
+        overflow-y: visible;
+        padding-bottom: 50px; /* Thêm padding dưới để dễ cuộn */
+      }
+
+      /* Cho phép sidebar-menu có thể cuộn */
+      #sidebarAccordion {
+        overflow-y: visible;
+        flex-grow: 1;
+        padding-bottom: 50px; /* Thêm padding dưới để dễ cuộn */
+      }
+
+      /* Ẩn module group khi sidebar bị collapse */
+      .sidebar.collapsed .module-group-item {
+        display: none;
+      }
+
+      /* Hiển thị các module con trực tiếp khi sidebar bị collapse */
+      .sidebar.collapsed .module-direct-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      /* Styling cho module flat items */
+      .module-flat-item {
+        display: none;
+      }
+
+      .sidebar.collapsed .module-flat-item {
+        display: block;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+
+      .sidebar.collapsed .module-flat-item .nav-link {
+        padding: 10px 5px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        height: auto;
+      }
+
+      .sidebar.collapsed .module-flat-item .nav-link i {
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+      }
+
+      .sidebar.collapsed .module-flat-item .nav-link span {
+        font-size: 0.7rem;
+        white-space: normal;
+        word-wrap: break-word;
+        display: block;
+        line-height: 1.2;
+      }
+
+      /* Hiển thị các icon module và tên trong sidebar collapsed */
+      .sidebar.collapsed .nav-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 10px 5px;
+      }
+
+      .sidebar.collapsed .nav-link i {
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+      }
+
+      .sidebar.collapsed .nav-link span {
+        font-size: 0.7rem;
+        opacity: 1;
+        max-height: none;
+        overflow: visible;
+        white-space: normal;
+        word-wrap: break-word;
+        width: 100%;
+        display: block;
+        line-height: 1.2;
+      }
+
+      /* Làm nổi bật module active */
+      .sidebar .nav-link.active {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 5px;
+      }
+
+      /* Thêm padding cho menu items */
+      .sidebar .nav-link {
+        padding: 10px;
+        margin: 2px 0;
+        border-radius: 5px;
+      }
+
+      /* Điều chỉnh sidebar brand khi collapsed */
+      .sidebar.collapsed .sidebar-brand {
+        justify-content: center;
+        padding: 10px 0;
+      }
+
+      .sidebar.collapsed .sidebar-brand h2 {
+        display: none;
+      }
+    </style>
+
+    <!-- JavaScript -->
+    <script th:src="@{/js/auth.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/sidebar.js}" defer></script>
+  </head>
+
+  <body>
+    <div th:fragment="navbar" class="top-navbar">
+      <button id="sidebarCollapseBtn" class="btn btn-link sidebar-toggle">
+        <i class="fas fa-bars"></i>
+      </button>
+      <h4 class="mb-0" >Dashboard</h4>
+
+    </div>
+
+    <!-- Sidebar Fragment -->
+    <div th:fragment="sidebar" class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <i class="fas fa-graduation-cap fa-2x me-2"></i>
+          <h2>LMS</h2>
+        </div>
+        <button id="sidebarToggle" class="btn btn-link d-md-none">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <ul class="sidebar-menu" id="sidebarAccordion">
+        <!-- Student-specific links -->
+
+
+        <li class="module-direct-link">
+          <a
+            th:href="@{/tools}"
+            th:class="${pageTitle == 'Tools'} ? 'active' : ''"
+          >
+            <i class="fas fa-tools"></i>
+            <span>Tools</span>
+          </a>
+        </li>
+
+        <!-- Admin and other roles links -->
+        <li  class="module-direct-link">
+          <a
+            th:href="@{/}"
+            th:class="${pageTitle == 'Dashboard'} ? 'active' : ''"
+          >
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+
+
+        <li class="module-direct-link">
+          <a
+            th:href="@{/module-groups}"
+            th:class="${pageTitle == 'Module Groups'} ? 'active' : ''"
+          >
+            <i class="fas fa-layer-group"></i>
+            <span>Module Group</span>
+          </a>
+        </li>
+
+        <li class="module-direct-link">
+          <a
+            th:href="@{/modules}"
+            th:class="${pageTitle == 'Modules'} ? 'active' : ''"
+          >
+            <i class="fas fa-cubes"></i>
+            <span>Modules</span>
+          </a>
+        </li>
+
+<!--        <li sec:authorize="hasRole('SUPERADMIN')" class="module-direct-link">-->
+<!--          <a-->
+<!--            th:href="@{/actuator-ui}"-->
+<!--            th:class="${pageTitle == 'System Monitoring'} ? 'active' : ''"-->
+<!--          >-->
+<!--            <i class="fas fa-chart-line"></i>-->
+<!--            <span>System Monitoring</span>-->
+<!--          </a>-->
+<!--        </li>-->
+
+        <li sec:authorize="!hasRole('STUDENT')" class="module-direct-link">
+          <a
+                  th:href="@{/reports}"
+                  th:classappend="${pageTitle == 'Reports'} ? 'active' : ''"
+          >
+            <i class="fas fa-chart-pie"></i>
+            <span>Reports</span>
+          </a>
+        </li>
+
+
+
+        <!-- Phần này sẽ được tạo động bằng JavaScript khi sidebar bị collapse -->
+        <div id="flat-modules-container"></div>
+      </ul>
+    </div>
+
+    <!-- Footer Fragment -->
+    <footer
+      th:fragment="footer"
+      class="footer mt-auto py-3 text-center text-muted"
+    >
+      <div class="container">
+        <p class="mb-0">© 2025 Learning Management System</p>
+      </div>
+    </footer>
+
+    <!-- Add script to ensure accordion functionality works properly -->
+    <script th:fragment="accordion_script">
+      document.addEventListener("DOMContentLoaded", function () {
+        // Make sure all Bootstrap components are properly initialized
+        var collapsibles = document.querySelectorAll(".collapse");
+        collapsibles.forEach(function (collapse) {
+          collapse.addEventListener("show.bs.collapse", function () {
+            // Close other open items when opening a new one
+            collapsibles.forEach(function (otherCollapse) {
+              if (
+                otherCollapse !== collapse &&
+                otherCollapse.classList.contains("show")
+              ) {
+                bootstrap.Collapse.getInstance(otherCollapse).hide();
+              }
+            });
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
