@@ -6,6 +6,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
@@ -24,5 +27,6 @@ public class Album {
     @Size(max = 50)
     @Column(unique = true)
     private String name;
-
+    @OneToMany(mappedBy = "album")
+    private List<Song> songs = new ArrayList<>();
 }
