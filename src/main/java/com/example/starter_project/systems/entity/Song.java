@@ -28,9 +28,9 @@ public class Song {
     private String name;
 //    private String artist;
 //    private String album;
-@ManyToOne
-@JoinColumn(name = "album_id")  // FK trong bảng songs
-private Album album;
+//@ManyToOne
+//@JoinColumn(name = "album_id")  // FK trong bảng songs
+//private Album album;
     private Integer year;
 //    private String genre;
 //    @ManyToMany(mappedBy = "songs")

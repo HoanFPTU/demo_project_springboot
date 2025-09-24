@@ -27,6 +27,6 @@ public class Album {
     @Size(max = 50)
     @Column(unique = true)
     private String name;
-    @OneToMany(mappedBy = "album")
-    private List<Song> songs = new ArrayList<>();
+//    @OneToMany(mappedBy = "album")
+//    private List<Song> songs = new ArrayList<>();
 }

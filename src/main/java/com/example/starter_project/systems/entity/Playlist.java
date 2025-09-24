@@ -27,12 +27,12 @@ public class Playlist {
     @Size(max = 50)
     @Column(unique = true)
     private String name;
-    @ManyToMany
-    @JoinTable(
-            name = "playlist_song",
-            joinColumns = @JoinColumn(name = "playlist_id"),
-            inverseJoinColumns = @JoinColumn(name = "song_id")
-    )
-    private List<Song> songs = new ArrayList<>();
+//    @ManyToMany
+//    @JoinTable(
+//            name = "playlist_song",
+//            joinColumns = @JoinColumn(name = "playlist_id"),
+//            inverseJoinColumns = @JoinColumn(name = "song_id")
+//    )
+//    private List<Song> songs = new ArrayList<>();
 
 }
