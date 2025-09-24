@@ -35,14 +35,14 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody @Valid UserDTO dto) {
-        if (dto.getName() == null || dto.getName().trim().isEmpty()) {
+        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Error: User name cannot be null or empty.");
         }
         Optional<User> existingUser = userService.findByEmail(dto.getEmail());
         if (existingUser.isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(String.format("Error: User with name '%s' already exists.", dto.getName()));
+                    .body(String.format("Error: User with email '%s' already exists.", dto.getEmail()));
         }
         try {
             UserDTO createdUser = userService.create(dto);

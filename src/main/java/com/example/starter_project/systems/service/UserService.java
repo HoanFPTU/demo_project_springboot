@@ -5,6 +5,7 @@ import com.example.starter_project.systems.dto.UserDTO;
 import com.example.starter_project.systems.entity.Role;
 import com.example.starter_project.systems.entity.User;
 import com.example.starter_project.systems.mapper.UserMapper;
+import com.example.starter_project.systems.repository.RoleRepository;
 import com.example.starter_project.systems.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,6 +23,8 @@ public class UserService {
     private UserRepository userRepository;
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private RoleRepository roleRepository;
 
     private String validateSortBy(String sortBy) {
         List<String> allowedSortFields = List.of("id", "name");
@@ -69,6 +72,9 @@ public class UserService {
 //        }
 //        return userRepository.save(user);
         User entity = userMapper.toEntity(dto);
+        Role role = roleRepository.findById(dto.getRoleId())
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+        entity.setRole(role);
         User saved = userRepository.save(entity);
         return userMapper.toDTO(saved);
     }
