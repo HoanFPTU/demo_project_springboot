@@ -79,4 +79,9 @@ public class PlaylistService {
     public long countBySearchCriteria(String search) {
         return playlistRepository.countByNameContainingIgnoreCase(search);
     }
+
+    public List<Playlist> findAllEntities() {
+        return playlistRepository.findAll();
+    }
+
 }

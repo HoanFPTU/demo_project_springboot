@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import java.util.ArrayList;
+import java.time.LocalDate;
 import java.util.List;
 
 @AllArgsConstructor
@@ -24,15 +24,25 @@ public class Playlist {
     private Long id;
 
     @NotNull
-    @Size(max = 50)
+    @Size(max = 100)
     @Column(unique = true)
     private String name;
-//    @ManyToMany
-//    @JoinTable(
-//            name = "playlist_song",
-//            joinColumns = @JoinColumn(name = "playlist_id"),
-//            inverseJoinColumns = @JoinColumn(name = "song_id")
-//    )
-//    private List<Song> songs = new ArrayList<>();
 
+    @Size(max = 300)
+    private String description;
+
+    private Boolean isPublic = true;
+
+    private Integer songLimit = 500;
+
+    private LocalDate dateUpdate;
+
+    // Lưu list bài hát trực tiếp vào bảng playlist_songs
+    @ElementCollection
+    @CollectionTable(
+            name = "playlist_songs",
+            joinColumns = @JoinColumn(name = "playlist_id")
+    )
+    @Column(name = "song_name")
+    private List<String> songs;
 }
