@@ -31,7 +31,9 @@ public class Song {
 //@ManyToOne
 //@JoinColumn(name = "album_id")  // FK trong bảng songs
 //private Album album;
-    private Integer year;
+    private String artist;
+    private Integer releaseYear;
+    private String genre;
 //    private String genre;
 //    @ManyToMany(mappedBy = "songs")
 //    private List<Playlist> playlists = new ArrayList<>();
