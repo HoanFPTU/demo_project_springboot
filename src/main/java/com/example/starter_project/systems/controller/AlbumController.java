@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +57,6 @@ public class AlbumController {
         String sortBy = sortParams[0];
         String sortDirection = sortParams.length > 1 ? sortParams[1] : "asc";
 
-        // ✅ Whitelist allowed sort fields for safety
         List<String> allowedSortFields = List.of("id", "name");
         if (!allowedSortFields.contains(sortBy)) {
             sortBy = "name";
@@ -99,7 +99,7 @@ public class AlbumController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/import")
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> importExcel(@RequestParam("file") MultipartFile file) {
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
@@ -107,7 +107,19 @@ public class AlbumController {
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
+
                 String name = row.getCell(0) != null ? row.getCell(0).getStringCellValue() : null;
+                String artistName = row.getCell(1) != null ? row.getCell(1).getStringCellValue() : null;
+                String songsStr = row.getCell(2) != null ? row.getCell(2).getStringCellValue() : null;
+                String releaseDateStr = row.getCell(3) != null ? row.getCell(3).getStringCellValue() : null;
+
+                List<String> songs = new ArrayList<>();
+                if (songsStr != null && !songsStr.trim().isEmpty()) {
+                    for (String s : songsStr.split(",")) {
+                        songs.add(s.trim());
+                    }
+                }
+
                 if (name == null || name.trim().isEmpty()) {
                     errors.add(String.format("Row %d: Album name cannot be null or empty.", i + 1));
                     continue;
@@ -117,13 +129,28 @@ public class AlbumController {
                     errors.add(String.format("Row %d: Album with name '%s' already exists.", i + 1, name));
                     continue;
                 }
-                AlbumDTO dto = new AlbumDTO();
-                dto.setName(name);
+
+                LocalDate releaseDate = null;
+                try {
+                    if (releaseDateStr != null && !releaseDateStr.trim().isEmpty()) {
+                        releaseDate = LocalDate.parse(releaseDateStr); // yyyy-MM-dd
+                    }
+                } catch (Exception e) {
+                    errors.add(String.format("Row %d: Invalid release date format, expected yyyy-MM-dd.", i + 1));
+                }
+
+                AlbumDTO dto = AlbumDTO.builder()
+                        .name(name)
+                        .artistName(artistName)
+                        .songs(songs)
+                        .releaseDate(releaseDate)
+                        .build();
                 albumService.create(dto);
             }
+
             if (!errors.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Import failed with the following errors: " + String.join("; ", errors));
+                        .body("Import failed with errors: " + String.join("; ", errors));
             }
             return ResponseEntity.ok("Albums imported successfully.");
         } catch (Exception e) {
@@ -142,11 +169,17 @@ public class AlbumController {
 
         Row header = sheet.createRow(0);
         header.createCell(0).setCellValue("Name");
+        header.createCell(1).setCellValue("Artist");
+        header.createCell(2).setCellValue("Songs");
+        header.createCell(3).setCellValue("ReleaseDate (yyyy-MM-dd)");
 
         for (int i = 0; i < albums.size(); i++) {
             AlbumDTO album = albums.get(i);
             Row row = sheet.createRow(i + 1);
             row.createCell(0).setCellValue(album.getName());
+            row.createCell(1).setCellValue(album.getArtistName() != null ? album.getArtistName() : "");
+            row.createCell(2).setCellValue(album.getSongs() != null ? String.join(", ", album.getSongs()) : "");
+            row.createCell(3).setCellValue(album.getReleaseDate() != null ? album.getReleaseDate().toString() : "");
         }
 
         workbook.write(response.getOutputStream());
