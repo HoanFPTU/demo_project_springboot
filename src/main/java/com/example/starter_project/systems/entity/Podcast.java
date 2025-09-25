@@ -2,6 +2,8 @@ package com.example.starter_project.systems.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @AllArgsConstructor
@@ -9,22 +11,18 @@ import lombok.*;
 @Setter
 @Getter
 @Entity
-@Table(name = "users")
+@Table(name = "podcasts")
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class User {
+public class Podcast {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @NotNull
+    @Size(max = 50)
+    @Column(unique = true)
     private String name;
-    private  String password;
-    private String email;
-    private String phone;
-    private String address;
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    private Role role;
-
-
 
 }
