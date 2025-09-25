@@ -15,6 +15,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -107,28 +108,50 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/import")
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> importExcel(@RequestParam("file") MultipartFile file) {
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
             List<String> errors = new ArrayList<>();
+
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
-                String name = row.getCell(0) != null ? row.getCell(0).getStringCellValue() : null;
-                if (name == null || name.trim().isEmpty()) {
+
+                // Đọc dữ liệu từng cột
+                String name = row.getCell(0) != null ? row.getCell(0).getStringCellValue().trim() : null;
+                String email = row.getCell(1) != null ? row.getCell(1).getStringCellValue().trim() : null;
+                String phone = row.getCell(2) != null ? row.getCell(2).getStringCellValue().trim() : null;
+                String address = row.getCell(3) != null ? row.getCell(3).getStringCellValue().trim() : null;
+
+                // Validate cơ bản
+                if (name == null || name.isEmpty()) {
                     errors.add(String.format("Row %d: User name cannot be null or empty.", i + 1));
                     continue;
                 }
+                if (email == null || email.isEmpty()) {
+                    errors.add(String.format("Row %d: Email cannot be null or empty.", i + 1));
+                    continue;
+                }
+
+                // Check trùng tên hoặc email
                 Optional<User> existingUser = userService.findByName(name);
                 if (existingUser.isPresent()) {
                     errors.add(String.format("Row %d: User with name '%s' already exists.", i + 1, name));
                     continue;
                 }
+
+                // Mapping sang DTO
                 UserDTO dto = new UserDTO();
                 dto.setName(name);
+                dto.setEmail(email);
+                dto.setPhone(phone);
+                dto.setAddress(address);
+
+                // Gọi service tạo user
                 userService.create(dto);
             }
+
             if (!errors.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("Import failed with the following errors: " + String.join("; ", errors));
@@ -140,6 +163,7 @@ public class UserController {
         }
     }
 
+
     @GetMapping("/export")
     public void exportExcel(HttpServletResponse response) throws IOException {
         response.setContentType("application/octet-stream");
@@ -150,11 +174,17 @@ public class UserController {
 
         Row header = sheet.createRow(0);
         header.createCell(0).setCellValue("Name");
+        header.createCell(1).setCellValue("Email");
+        header.createCell(2).setCellValue("Phone");
+        header.createCell(3).setCellValue("Address");
 
         for (int i = 0; i < users.size(); i++) {
             UserDTO user = users.get(i);
             Row row = sheet.createRow(i + 1);
             row.createCell(0).setCellValue(user.getName());
+            row.createCell(1).setCellValue(user.getEmail());
+            row.createCell(2).setCellValue(user.getPhone());
+            row.createCell(3).setCellValue(user.getAddress());
         }
 
         workbook.write(response.getOutputStream());
