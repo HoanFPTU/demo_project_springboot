@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,7 +25,6 @@ public class QuizDetailService {
     public QuizDetailDTO create(QuizDetailDTO dto) {
         QuizDetail quiz = toEntity(dto);
 
-        // set parent
         if (quiz.getQuestions() != null) {
             quiz.getQuestions().forEach(q -> {
                 q.setQuiz(quiz);
@@ -44,7 +42,8 @@ public class QuizDetailService {
     }
 
     public QuizDetailDTO update(Long id, QuizDetailDTO dto) {
-        QuizDetail quiz = quizDetailRepository.findById(id).orElseThrow(() -> new RuntimeException("Quiz not found"));
+        QuizDetail quiz = quizDetailRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Quiz not found"));
 
         quiz.setName(dto.getName());
         quiz.setDescription(dto.getDescription());
@@ -104,14 +103,24 @@ public class QuizDetailService {
         return quizDetailRepository.findByNameContainingIgnoreCase(search,Pageable.unpaged()).getTotalElements();
     }
 
-    // ==== Mapper inside service for simplicity ====
+    // ===== NEW: GET ALL LIST FOR EXPORT/IMPORT =====
+    public List<QuizDetailDTO> findAll() {
+        return quizDetailRepository.findAll()
+                .stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    // ===== Mapper =====
     private QuizDetailDTO toDTO(QuizDetail quiz) {
         List<QuestionDTO> questions = null;
         if (quiz.getQuestions()!=null) {
             questions = quiz.getQuestions().stream().map(q -> {
                 List<AnswerDTO> answers = null;
                 if (q.getAnswers()!=null)
-                    answers = q.getAnswers().stream().map(a-> new AnswerDTO(a.getId(),a.getContent(),a.getIsCorrect())).collect(Collectors.toList());
+                    answers = q.getAnswers().stream()
+                            .map(a-> new AnswerDTO(a.getId(),a.getContent(),a.getIsCorrect()))
+                            .collect(Collectors.toList());
                 return new QuestionDTO(q.getId(),q.getContent(),answers);
             }).collect(Collectors.toList());
         }
