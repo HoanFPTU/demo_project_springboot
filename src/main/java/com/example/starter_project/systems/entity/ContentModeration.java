@@ -11,7 +11,9 @@ import lombok.*;
 @Setter
 @Getter
 @Entity
-@Table(name = "content_moderations")
+@Table(name = "content_moderations", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "contentName")
+})
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ContentModeration {
@@ -22,11 +24,13 @@ public class ContentModeration {
 
     @NotBlank(message = "Content name cannot be blank")
     @Size(max = 50, message = "Content name must not exceed 50 characters")
-    @Column(unique = true, nullable = false, length = 50)
+    @Column(name = "contentName", unique = true, nullable = false, length = 50)
     private String contentName;
 
     @NotBlank(message = "Status cannot be blank")
+    @Column(nullable = false, length = 20)
     private String status; // pending, approved, rejected
 
+    @Size(max = 255)
     private String reason; // lý do nếu rejected
 }

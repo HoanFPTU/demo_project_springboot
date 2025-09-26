@@ -9,7 +9,6 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
 
-
 @Mapper(componentModel = "spring")
 public interface ContentModerationMapper {
     ContentModerationDTO toDTO(ContentModeration entity);

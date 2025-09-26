@@ -1,7 +1,7 @@
 package com.example.starter_project.systems.controller;
 
 import com.example.starter_project.systems.dto.ContentModerationDTO;
-import com.example.starter_project.systems.service.ContentModerationService; // ✅ thêm import
+import com.example.starter_project.systems.service.ContentModerationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,31 +17,21 @@ public class ContentModerationController {
     private final ContentModerationService service;
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody @Valid ContentModerationDTO dto) {
-        if (service.findByContentName(dto.getContentName()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("ContentModeration with name '" + dto.getContentName() + "' already exists");
-        }
-        return ResponseEntity.ok(service.create(dto));
+    public ResponseEntity<ContentModerationDTO> create(@RequestBody @Valid ContentModerationDTO dto) {
+        ContentModerationDTO created = service.create(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody @Valid ContentModerationDTO dto) {
-        if (!service.findById(id).isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("ContentModeration with id '" + id + "' not found");
-        }
-        return ResponseEntity.ok(service.update(id, dto));
+    public ResponseEntity<ContentModerationDTO> update(@PathVariable Long id, @RequestBody @Valid ContentModerationDTO dto) {
+        ContentModerationDTO updated = service.update(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        if (!service.findById(id).isPresent()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("ContentModeration with id '" + id + "' not found");
-        }
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return ResponseEntity.ok("Deleted successfully");
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping
