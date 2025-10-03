@@ -75,11 +75,11 @@ public class UserService {
 //        }
 //        return userRepository.save(user);
         User entity = userMapper.toEntity(dto);
-        Long roleId = (dto.getRoleId() == null) ? 1L : dto.getRoleId();
-
-        Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
-        entity.setRole(role);
+//        Long roleId = (dto.getRoleId() == null) ? 1L : dto.getRoleId();
+//
+//        Role role = roleRepository.findById(roleId)
+//                .orElseThrow(() -> new RuntimeException("Role not found"));
+//        entity.setRole(role);
         User saved = userRepository.save(entity);
         return userMapper.toDTO(saved);
     }
@@ -112,6 +112,13 @@ public UserDTO update(Long id, UserDTO dto) {
 
     public void delete(Long id) {
         userRepository.deleteById(id);
+    }
+    public long countUsers() {
+        return userRepository.count();
+    }
+
+    public long countBySearchCriteria(String search) {
+        return userRepository.countByNameContainingIgnoreCase(search);
     }
 
 

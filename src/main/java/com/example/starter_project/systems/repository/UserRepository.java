@@ -27,4 +27,6 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
     // Tìm user theo name (ignore case)
     Page<User> findByNameContainingIgnoreCase(String query, Pageable pageable);
+
+    long countByNameContainingIgnoreCase(String search);
 }

@@ -190,6 +190,12 @@ public class UserController {
         workbook.write(response.getOutputStream());
         workbook.close();
     }
+    @GetMapping("/count")
+    public ResponseEntity<Long> getUserCount(@RequestParam(required = false) String search) {
+        long count = (search != null && !search.isEmpty()) ?
+                userService.countBySearchCriteria(search) : userService.countUsers();
+        return ResponseEntity.ok(count);
+    }
 
 
 }
