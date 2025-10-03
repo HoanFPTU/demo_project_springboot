@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,8 +19,13 @@ public class SongDTO {
     @Size(max = 50, message = "Song name must not exceed 50 characters")
     @NotBlank(message = "Song name cannot be blank")
     private String name;
-    private String artist;
+
+
     private Integer releaseYear;
     private String genre;
+    // input
+    private List<Long> artistIds;
 
+    // output
+    private List<SimpleDTO> artists; // id + name
 }

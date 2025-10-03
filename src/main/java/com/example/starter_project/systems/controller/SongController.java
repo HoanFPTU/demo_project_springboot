@@ -1,27 +1,30 @@
 package com.example.starter_project.systems.controller;
 
+import com.example.starter_project.systems.dto.SimpleDTO;
 import com.example.starter_project.systems.dto.SongDTO;
+import com.example.starter_project.systems.entity.Artist;
 import com.example.starter_project.systems.entity.Song;
 import com.example.starter_project.systems.service.SongService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/songs")
 public class SongController {
@@ -34,11 +37,6 @@ public class SongController {
         if (dto.getName() == null || dto.getName().trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("Error: Song name cannot be null or empty.");
-        }
-        Optional<Song> existingSong = songService.findByName(dto.getName());
-        if (existingSong.isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(String.format("Error: Song with name '%s' already exists.", dto.getName()));
         }
         try {
             SongDTO createdSong = songService.create(dto);
@@ -61,7 +59,7 @@ public class SongController {
         String sortDirection = sortParams.length > 1 ? sortParams[1] : "asc";
 
         // ✅ Whitelist allowed sort fields for safety
-        List<String> allowedSortFields = List.of("id", "name");
+        List<String> allowedSortFields = List.of("id", "name","releaseYear");
         if (!allowedSortFields.contains(sortBy)) {
             sortBy = "name";
         }
@@ -102,22 +100,35 @@ public class SongController {
         songService.deleteSong(id);
         return ResponseEntity.noContent().build();
     }
-
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> importExcel(@RequestParam("file") MultipartFile file) {
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
             List<String> errors = new ArrayList<>();
+            DataFormatter formatter = new DataFormatter();
 
-            for (int i = 1; i <= sheet.getLastRowNum(); i++) { // bắt đầu từ row 1 vì row 0 là header
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) { // bỏ row header
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
 
                 // Cột 0: name
-                String name = row.getCell(0) != null ? row.getCell(0).getStringCellValue().trim() : null;
-                // Cột 1: artist
-                String artist = row.getCell(1) != null ? row.getCell(1).getStringCellValue().trim() : null;
-                // Cột 2: releaseYear (dùng numeric)
+                String name = row.getCell(0) != null ? formatter.formatCellValue(row.getCell(0)).trim() : null;
+
+                // Cột 1: artistIds (ví dụ: "1,2,3")
+                String artistStr = row.getCell(1) != null ? formatter.formatCellValue(row.getCell(1)).trim() : null;
+                List<Long> artistIds = new ArrayList<>();
+                if (artistStr != null && !artistStr.isEmpty()) {
+                    try {
+                        artistIds = Arrays.stream(artistStr.split(","))
+                                .map(String::trim)
+                                .map(Long::parseLong)
+                                .collect(Collectors.toList());
+                    } catch (NumberFormatException e) {
+                        errors.add(String.format("Row %d: Invalid artist IDs format (must be numbers separated by commas).", i + 1));
+                    }
+                }
+
+                // Cột 2: releaseYear
                 Integer releaseYear = null;
                 if (row.getCell(2) != null) {
                     if (row.getCell(2).getCellType() == CellType.NUMERIC) {
@@ -126,8 +137,9 @@ public class SongController {
                         errors.add(String.format("Row %d: ReleaseYear must be a number.", i + 1));
                     }
                 }
+
                 // Cột 3: genre
-                String genre = row.getCell(3) != null ? row.getCell(3).getStringCellValue().trim() : null;
+                String genre = row.getCell(3) != null ? formatter.formatCellValue(row.getCell(3)).trim() : null;
 
                 // Validate name
                 if (name == null || name.isEmpty()) {
@@ -135,17 +147,10 @@ public class SongController {
                     continue;
                 }
 
-                // Check trùng tên
-                Optional<Song> existingSong = songService.findByName(name);
-                if (existingSong.isPresent()) {
-                    errors.add(String.format("Row %d: Song with name '%s' already exists.", i + 1, name));
-                    continue;
-                }
-
                 // Map DTO
                 SongDTO dto = new SongDTO();
                 dto.setName(name);
-                dto.setArtist(artist);
+                dto.setArtistIds(artistIds);
                 dto.setReleaseYear(releaseYear);
                 dto.setGenre(genre);
 
@@ -184,8 +189,15 @@ public class SongController {
             SongDTO song = songs.get(i);
             Row row = sheet.createRow(i + 1);
 
+
             row.createCell(0).setCellValue(song.getName() != null ? song.getName() : "");
-            row.createCell(1).setCellValue(song.getArtist() != null ? song.getArtist() : "");
+            row.createCell(1).setCellValue(
+                    song.getArtists() != null && !song.getArtists().isEmpty()
+                            ? song.getArtists().stream()
+                            .map(dto -> String.valueOf(dto.getId())) // lấy ID ca sĩ dạng chuỗi
+                            .collect(Collectors.joining(", "))
+                            : ""
+            );
             row.createCell(2).setCellValue(song.getReleaseYear() != null ? song.getReleaseYear() : 0);
             row.createCell(3).setCellValue(song.getGenre() != null ? song.getGenre() : "");
         }

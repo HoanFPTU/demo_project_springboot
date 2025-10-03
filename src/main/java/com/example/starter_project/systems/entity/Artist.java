@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Setter
@@ -26,5 +29,8 @@ public class Artist {
     private String country;
     private Integer debutYear;
     private String description;
+    // mappedBy trỏ về field "artists" trong Song
+    @ManyToMany(mappedBy = "artists")
+    private Set<Song> songs = new HashSet<>();
 
 }

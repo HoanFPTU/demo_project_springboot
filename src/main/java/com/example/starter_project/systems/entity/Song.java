@@ -7,7 +7,9 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -31,10 +33,9 @@ public class Song {
 //@ManyToOne
 //@JoinColumn(name = "album_id")  // FK trong bảng songs
 //private Album album;
-    private String artist;
+
     private Integer releaseYear;
     private String genre;
-//    private String genre;
-//    @ManyToMany(mappedBy = "songs")
-//    private List<Playlist> playlists = new ArrayList<>();
+    @ManyToMany
+    private Set<Artist> artists;
 }
